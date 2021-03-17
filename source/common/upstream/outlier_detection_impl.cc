@@ -178,6 +178,17 @@ void DetectorHostMonitorImpl::putResult(Result result, absl::optional<uint64_t> 
   put_result_func_(this, result, code);
 }
 
+void DetectorHostMonitorImpl::putResponseTime(std::chrono::milliseconds response_time) {
+  std::shared_ptr<DetectorImpl> detector = detector_.lock();
+  if (!detector) {
+    // It's possible for the cluster/detector to go away while we still have a host in use.
+    return;
+  }
+  if (response_time > std::chrono::milliseconds(detector->config().latentResponseThresholdMs())) {
+    return localOriginFailure();
+  }
+}
+
 void DetectorHostMonitorImpl::localOriginFailure() {
   std::shared_ptr<DetectorImpl> detector = detector_.lock();
   if (!detector) {
@@ -252,9 +263,15 @@ DetectorConfig::DetectorConfig(const envoy::config::cluster::v3::OutlierDetectio
                                           DEFAULT_ENFORCING_LOCAL_ORIGIN_SUCCESS_RATE))),
       // If max_ejection_time was not specified in the config, apply the default or
       // base_ejection_time whatever is larger.
-      max_ejection_time_ms_(static_cast<uint64_t>(PROTOBUF_GET_MS_OR_DEFAULT(
-          config, max_ejection_time,
-          std::max(DEFAULT_MAX_EJECTION_TIME_MS, base_ejection_time_ms_)))) {}
+      max_ejection_time_ms_(
+          static_cast<uint64_t>(PROTOBUF_GET_MS_OR_DEFAULT(
+              config, max_ejection_time,
+              std::max(DEFAULT_MAX_EJECTION_TIME_MS, base_ejection_time_ms_))),
+
+          latent_response_threshold_ms_(static_cast<uint64_t>(PROTOBUF_GET_MS_OR_DEFAULT(
+              config, latent_response_threshold, DEFAULT_LATENT_RESPONSE_THRESHOLD_MS))),
+          consecutive_latent_response_(static_cast<uint64_t>(PROTOBUF_GET_WRAPPED_OR_DEFAULT(
+              config, consecutive_latent_response, DEFAULT_CONSECUTIVE_LATENT_RESPONSE))){}) {}
 
 DetectorImpl::DetectorImpl(const Cluster& cluster,
                            const envoy::config::cluster::v3::OutlierDetection& config,

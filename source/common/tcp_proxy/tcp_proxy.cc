@@ -570,6 +570,14 @@ Network::FilterStatus Filter::onData(Buffer::Instance& data, bool end_stream) {
                  read_callbacks_->connection(), data.length(), end_stream);
   if (upstream_) {
     upstream_->encodeData(data, end_stream);
+    // update the outlier with the latest response time
+    if (DateUtil::timePointValid(downstream_write_complete_time_)) {
+      Event::Dispatcher& dispatcher = read_callbacks_->connection().dispatcher();
+      std::chrono::milliseconds response_time =
+          std::chrono::duration_cast<std::chrono::milliseconds>(
+              dispatcher.timeSource().monotonicTime() - downstream_write_complete_time_);
+      read_callbacks_->upstreamHost()->outlierDetector().putResponseTime(response_time);
+    }
   }
   // The upstream should consume all of the data.
   // Before there is an upstream the connection should be readDisabled. If the upstream is
@@ -617,6 +625,9 @@ void Filter::onUpstreamData(Buffer::Instance& data, bool end_stream) {
   read_callbacks_->connection().write(data, end_stream);
   ASSERT(0 == data.length());
   resetIdleTimer(); // TODO(ggreenway) PERF: do we need to reset timer on both send and receive?
+
+  downstream_write_complete_time_ =
+      read_callbacks_->connection().dispatcher().timeSource().monotonicTime();
 }
 
 void Filter::onUpstreamEvent(Network::ConnectionEvent event) {

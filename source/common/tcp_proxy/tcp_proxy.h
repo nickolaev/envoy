@@ -368,6 +368,7 @@ protected:
   DownstreamCallbacks downstream_callbacks_;
   Event::TimerPtr idle_timer_;
   Event::TimerPtr connection_duration_timer_;
+  MonotonicTime downstream_write_complete_time_;
 
   std::shared_ptr<UpstreamCallbacks> upstream_callbacks_; // shared_ptr required for passing as a
                                                           // read filter.

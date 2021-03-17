@@ -18,7 +18,7 @@ option (udpa.annotations.file_status).package_version_status = ACTIVE;
 
 // See the :ref:`architecture overview <arch_overview_outlier_detection>` for
 // more information on outlier detection.
-// [#next-free-field: 22]
+// [#next-free-field: 24]
 message OutlierDetection {
   option (udpa.annotations.versioning).previous_message_type =
       "envoy.api.v2.cluster.OutlierDetection";
@@ -154,4 +154,11 @@ message OutlierDetection {
   // for more information. If not specified, the default value (300000ms or 300s) or
   // :ref:`base_ejection_time<envoy_api_field_config.cluster.v3.OutlierDetection.base_ejection_time>` value is applied, whatever is larger.
   google.protobuf.Duration max_ejection_time = 21 [(validate.rules).duration = {gt {}}];
+
+  // The response latency threshold. Zero means this is off. Defaults to 0.
+  google.protobuf.Duration latent_response_threshold = 22 [(validate.rules).duration = {gt {}}];
+
+  // The number of consecutive high latency responses before latency response ejection
+  // occurs. Defaults to 5.
+  google.protobuf.UInt32Value consecutive_latent_response = 23;
 }

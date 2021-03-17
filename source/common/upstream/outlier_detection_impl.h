@@ -154,7 +154,7 @@ public:
   uint32_t numEjections() override { return num_ejections_; }
   void putHttpResponseCode(uint64_t response_code) override;
   void putResult(Result result, absl::optional<uint64_t> code) override;
-  void putResponseTime(std::chrono::milliseconds) override {}
+  void putResponseTime(std::chrono::milliseconds) override;
   const absl::optional<MonotonicTime>& lastEjectionTime() override { return last_ejection_time_; }
   const absl::optional<MonotonicTime>& lastUnejectionTime() override {
     return last_unejection_time_;
@@ -318,6 +318,8 @@ public:
   }
   uint64_t enforcingLocalOriginSuccessRate() const { return enforcing_local_origin_success_rate_; }
   uint64_t maxEjectionTimeMs() const { return max_ejection_time_ms_; }
+  uint64_t latentResponseThresholdMs() const { return latent_response_threshold_ms_; }
+  uint64_t consecutiveLatentResponse() const { return consecutive_latent_response_; }
 
 private:
   const uint64_t interval_ms_;
@@ -341,6 +343,8 @@ private:
   const uint64_t enforcing_consecutive_local_origin_failure_;
   const uint64_t enforcing_local_origin_success_rate_;
   const uint64_t max_ejection_time_ms_;
+  const uint64_t latent_response_threshold_ms_;
+  const uint64_t consecutive_latent_response_;
 
   static constexpr uint64_t DEFAULT_INTERVAL_MS = 10000;
   static constexpr uint64_t DEFAULT_BASE_EJECTION_TIME_MS = 30000;
@@ -362,6 +366,8 @@ private:
   static constexpr uint64_t DEFAULT_ENFORCING_CONSECUTIVE_LOCAL_ORIGIN_FAILURE = 100;
   static constexpr uint64_t DEFAULT_ENFORCING_LOCAL_ORIGIN_SUCCESS_RATE = 100;
   static constexpr uint64_t DEFAULT_MAX_EJECTION_TIME_MS = 10 * DEFAULT_BASE_EJECTION_TIME_MS;
+  static constexpr uint64_t DEFAULT_LATENT_RESPONSE_THRESHOLD_MS = 0;
+  static constexpr uint64_t DEFAULT_CONSECUTIVE_LATENT_RESPONSE = 5;
 };
 
 /**

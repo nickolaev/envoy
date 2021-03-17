@@ -62,6 +62,9 @@ enum OutlierEjectionType {
   // Runs over aggregated success rate statistics for local origin failures from every host in
   // cluster and selects hosts for which ratio of failed replies is above configured value.
   FAILURE_PERCENTAGE_LOCAL_ORIGIN = 6;
+
+  // In case upstream host returns certain number of consecutive 5xx.
+  CONSECUTIVE_LATENT_RESPONSES = 7;
 }
 
 // Represents possible action applied to upstream host
